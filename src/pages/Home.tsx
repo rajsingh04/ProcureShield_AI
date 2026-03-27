@@ -4,9 +4,10 @@ import "./Home.css";
 
 interface HomeProps {
   onAnalyzeSuccess: (data: any) => void;
+  headerRight?: React.ReactNode;
 }
 
-const Home: React.FC<HomeProps> = ({ onAnalyzeSuccess }) => {
+const Home: React.FC<HomeProps> = ({ onAnalyzeSuccess, headerRight }) => {
   return (
     <div className="home-container">
       <header className="home-header">
@@ -14,6 +15,11 @@ const Home: React.FC<HomeProps> = ({ onAnalyzeSuccess }) => {
           <span className="logo-icon">🛡️</span>
           <h1>ProcureShield AI</h1>
         </div>
+        {headerRight && (
+          <div>
+            {headerRight}
+          </div>
+        )}
       </header>
 
       <main className="home-main">

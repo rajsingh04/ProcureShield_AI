@@ -168,7 +168,15 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({ invoices }) => {
                     </div>
                     <div className="detail-item">
                       <div className="detail-lbl">PO Number</div>
-                      <div className="detail-val">{selectedInvoice["PO Number"] || "N/A"}</div>
+                      <div className="detail-val">{selectedInvoice["PO Number"] || selectedInvoice["PO Reference"] || "N/A"}</div>
+                    </div>
+                    <div className="detail-item">
+                      <div className="detail-lbl">PO Reference</div>
+                      <div className="detail-val">{selectedInvoice["PO Reference"] || selectedInvoice["PO Number"] || "N/A"}</div>
+                    </div>
+                    <div className="detail-item">
+                      <div className="detail-lbl">GRN Reference</div>
+                      <div className="detail-val">{selectedInvoice["GRN Reference"] || selectedInvoice["GRN No"] || "N/A"}</div>
                     </div>
                     <div className="detail-item">
                       <div className="detail-lbl">Invoice Date</div>
@@ -176,7 +184,7 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({ invoices }) => {
                     </div>
                     <div className="detail-item">
                       <div className="detail-lbl">Department</div>
-                      <div className="detail-val">{selectedInvoice["Department"] || "N/A"}</div>
+                      <div className="detail-val">{selectedInvoice["Department"] || selectedInvoice["Dept"] || selectedInvoice["Cost Center"] || "N/A"}</div>
                     </div>
                   </div>
                 </div>

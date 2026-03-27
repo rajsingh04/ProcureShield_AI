@@ -37,14 +37,28 @@ def run_pipeline(excel_file_path: str, output_dir: str):
         try:
             if excel_file_path.endswith('.csv'):
                 if name == 'Invoice Register (Problem)':
-                    # Helper to try different encodings
+                    # Helper to try different encodings robustly
                     def try_read_csv(**kwargs):
-                        for enc in ['utf-8', 'latin1', 'cp1252', 'iso-8859-1']:
+                        for enc in ['utf-8', 'utf-8-sig', 'latin1', 'cp1252', 'iso-8859-1']:
                             try:
                                 return pd.read_csv(excel_file_path, encoding=enc, **kwargs)
                             except UnicodeDecodeError:
                                 continue
-                        return pd.read_csv(excel_file_path, **kwargs) # final attempt
+                            except Exception:
+                                continue
+
+                        # As a final fallback, read as bytes and decode with very lenient handling
+                        # so that we never crash on bad bytes – they will just be replaced/ignored.
+                        import io
+                        try:
+                            with open(excel_file_path, 'rb') as f:
+                                raw = f.read()
+                            # Decode with latin1 which can map any byte, then let pandas parse
+                            text = raw.decode('latin1', errors='ignore')
+                            return pd.read_csv(io.StringIO(text), **kwargs)
+                        except Exception:
+                            # If even this fails, re-raise to caller
+                            raise
 
                     # Check first few lines to determine where header is
                     df_test = try_read_csv(nrows=5)
@@ -356,16 +370,19 @@ def run_pipeline(excel_file_path: str, output_dir: str):
         print(f"ML Model error: {e}")
         df_inv['ML_PREDICTION'] = y
 
-    # Draw Risk Distribution Chart via report engine
-    chart_path = generate_risk_chart(df_inv, output_dir)
+    # Draw Risk Distribution Chart via report engine (returns PNG bytes)
+    chart_bytes = generate_risk_chart(df_inv)
 
-    # Save Excel Report
-    report_path = os.path.join(output_dir, 'ProcureShield_AI_Report.xlsx')
+    # Prepare Excel Report into bytes (in-memory)
+    import io
+    report_buffer = io.BytesIO()
     df_flagged = df_inv[df_inv['PREDICTED_ANOMALY'] != 'NORMAL'].sort_values('risk_score', ascending=False)
-    
-    with pd.ExcelWriter(report_path, engine='openpyxl') as writer:
+    with pd.ExcelWriter(report_buffer, engine='openpyxl') as writer:
         df_flagged.to_excel(writer, sheet_name='Flagged Invoices', index=False)
         df_inv.to_excel(writer, sheet_name='All Invoices', index=False)
+    report_buffer.seek(0)
+    report_bytes = report_buffer.read()
+    report_buffer.close()
 
     # Return all invoices, not just flagged ones
     # And keep all columns to allow dynamic rendering in UI
@@ -394,4 +411,7 @@ def run_pipeline(excel_file_path: str, output_dir: str):
             "autoApproved": int((df_inv['risk_decision'] == 'AUTO APPROVE').sum())
         },
         "flaggedInvoices": top_flagged
+        ,
+        "report_bytes": report_bytes,
+        "chart_bytes": chart_bytes
     }

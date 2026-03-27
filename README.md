@@ -24,7 +24,7 @@ The application requires both the FastAPI backend and the React frontend to run 
 
 ### 1. Backend Setup
 
-The backend handles the data pipeline, anomaly rules engine, and image generation.
+The backend handles the data pipeline, anomaly rules engine, database, and image generation.
 
 1. Navigate to the project root directory.
 2. Create and activate a Python virtual environment:
@@ -47,6 +47,42 @@ The backend handles the data pipeline, anomaly rules engine, and image generatio
    uvicorn main:app --reload
    ```
    *The backend will run on `http://localhost:8000`.*
+
+### 1.1 Database Configuration (PostgreSQL)
+
+The backend uses PostgreSQL to store login logs and upload history. Connection settings are read from environment variables via `backend/config.py` using `python-dotenv`.
+
+1. **Install PostgreSQL locally** (if not already installed).
+2. **Create a database and user** (you can also reuse the default `postgres` user):
+   ```bash
+   # Open psql as a superuser
+   psql -U postgres
+
+   -- Create database (name should match DB_NAME)
+   CREATE DATABASE procure_db;
+
+   -- Optional: create a dedicated app user
+   CREATE USER procure_user WITH PASSWORD 'strong_password_here';
+   GRANT ALL PRIVILEGES ON DATABASE procure_db TO procure_user;
+   ```
+3. **Create a `.env` file in the project root** (same folder as `backend/` and `src/`) with database variables. Example:
+   ```env
+   # PostgreSQL connection
+   DB_HOST=localhost
+   DB_PORT=5432
+   DB_NAME=procure_db
+   DB_USER=procure_user   # or postgres
+   DB_PASSWORD=strong_password_here
+   ```
+   These values map directly to `DB_CONFIG` in `backend/config.py`.
+4. **Start the backend** (`uvicorn main:app --reload` from inside `backend/`). On startup the app will:
+   - Attempt to connect to PostgreSQL using `DB_*` variables.
+   - Automatically create the required tables (`user_login_logs`, `file_upload_metadata`) via `init_database()` if the user has permission.
+
+If the database connection fails, check:
+- PostgreSQL is running and listening on the host/port you configured.
+- The user/password are correct and have privileges on the database.
+- The `.env` file is present in the project root and the terminal is started from that root when running the backend.
 
 ### 2. Frontend Setup
 

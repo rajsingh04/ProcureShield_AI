@@ -122,6 +122,8 @@ def init_database() -> bool:
                     risk_score_avg FLOAT,
                     report_path TEXT,
                     chart_path TEXT,
+                    report_blob BYTEA,
+                    chart_blob BYTEA,
                     uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     processed_at TIMESTAMP,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -135,6 +137,14 @@ def init_database() -> bool:
             cur.execute("CREATE INDEX IF NOT EXISTS idx_login_logs_login_at ON user_login_logs(login_at)")
             cur.execute("CREATE INDEX IF NOT EXISTS idx_upload_logs_user_email ON file_upload_metadata(user_email)")
             cur.execute("CREATE INDEX IF NOT EXISTS idx_upload_logs_uploaded_at ON file_upload_metadata(uploaded_at)")
+
+            # Ensure blob columns exist for migrations from older schema (best-effort)
+            try:
+                cur.execute("ALTER TABLE file_upload_metadata ADD COLUMN IF NOT EXISTS report_blob BYTEA")
+                cur.execute("ALTER TABLE file_upload_metadata ADD COLUMN IF NOT EXISTS chart_blob BYTEA")
+            except Exception:
+                # If the database user can't ALTER, ignore and continue
+                pass
 
             conn.commit()
             cur.close()
@@ -290,7 +300,9 @@ def update_file_metadata(
     flagged_invoices: int = None,
     risk_score_avg: float = None,
     report_path: str = None,
-    chart_path: str = None
+    chart_path: str = None,
+    report_blob: bytes = None,
+    chart_blob: bytes = None
 ) -> bool:
     """
     Updates file upload metadata after processing.
@@ -334,6 +346,12 @@ def update_file_metadata(
             if chart_path:
                 update_fields.append("chart_path = %s")
                 values.append(chart_path)
+            if report_blob is not None:
+                update_fields.append("report_blob = %s")
+                values.append(psycopg2.Binary(report_blob))
+            if chart_blob is not None:
+                update_fields.append("chart_blob = %s")
+                values.append(psycopg2.Binary(chart_blob))
 
             values.append(metadata_id)
 
@@ -383,3 +401,27 @@ def get_upload_history(user_email: str, limit: int = 20, offset: int = 0) -> dic
     except Exception as e:
         logger.error(f"Failed to get upload history: {e}")
         return {"uploads": [], "total": 0, "limit": limit, "offset": offset}
+
+
+def get_report_blob(metadata_id: int):
+    """Returns report blob bytes for a given metadata id."""
+    try:
+        with get_db_cursor() as cur:
+            cur.execute("SELECT report_blob FROM file_upload_metadata WHERE id = %s", (metadata_id,))
+            row = cur.fetchone()
+            return row['report_blob'] if row else None
+    except Exception as e:
+        logger.error(f"Failed to fetch report blob: {e}")
+        return None
+
+
+def get_chart_blob(metadata_id: int):
+    """Returns chart blob bytes for a given metadata id."""
+    try:
+        with get_db_cursor() as cur:
+            cur.execute("SELECT chart_blob FROM file_upload_metadata WHERE id = %s", (metadata_id,))
+            row = cur.fetchone()
+            return row['chart_blob'] if row else None
+    except Exception as e:
+        logger.error(f"Failed to fetch chart blob: {e}")
+        return None
