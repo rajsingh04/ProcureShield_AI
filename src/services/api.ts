@@ -1,6 +1,11 @@
 // API service wrappers
 
 const BASE_URL = "/api";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+
+export const initiateGoogleLogin = () => {
+  window.location.href = `${BACKEND_URL}/api/auth/login`;
+};
 
 export const uploadFileForAnalysis = async (file: File) => {
   const formData = new FormData();
