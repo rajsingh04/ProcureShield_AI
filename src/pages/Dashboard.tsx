@@ -1,4 +1,5 @@
 import React from "react";
+import { Routes, Route, NavLink, Navigate } from "react-router-dom";
 import "./Dashboard.css";
 import DashboardStats from "../components/DashboardStats";
 import DataCharts from "../components/DataCharts";
@@ -12,12 +13,10 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ onBack, data }) => {
-  // Use real data passed from parent if available, fallback safely
-  const responseData = data?.data || data; // Handle nested { data: {...} } vs { stats: {...} }
+  const responseData = data?.data || data;
   const stats = responseData?.stats;
   const flaggedInvoices = responseData?.flaggedInvoices || [];
   
-  // Extract dataset summary from flagged invoices if it exists
   const summaryRow = flaggedInvoices.find((inv: any) => inv["Invoice No"] && (inv["Invoice No"].toString().includes("DATASET SUMMARY") || inv["Invoice No"].toString().includes("Find:")));
   const validInvoices = flaggedInvoices.filter((inv: any) => !inv["Invoice No"] || !(inv["Invoice No"].toString().includes("DATASET SUMMARY") || inv["Invoice No"].toString().includes("Find:")));
 
@@ -27,31 +26,45 @@ const Dashboard: React.FC<DashboardProps> = ({ onBack, data }) => {
 
   return (
     <div className="dashboard-container">
-      <header className="home-header">
-        <div className="logo" onClick={onBack} style={{ cursor: "pointer" }}>
-          <span className="logo-icon">🛡️</span>
-          <h1>ProcureShield AI</h1>
+      <nav className="dashboard-nav">
+        <div className="nav-logo" onClick={onBack} style={{ cursor: "pointer" }}>🛡️</div>
+        <div className="nav-brand" onClick={onBack} style={{ cursor: "pointer" }}>ProcureShield <span>AI</span></div>
+        <div className="nav-tabs">
+          <NavLink to="/dashboard/overview" className={({ isActive }) => `nav-tab ${isActive ? "active" : ""}`}>Overview</NavLink>
+          <NavLink to="/dashboard/invoices" className={({ isActive }) => `nav-tab ${isActive ? "active" : ""}`}>Invoices</NavLink>
         </div>
-        <button className="export-button" onClick={handleExport}>⬇ Export Report</button>
-      </header>
+        <div className="nav-right">
+          <span className="live-dot"></span>
+          <span className="nav-pill">LIVE SYSTEM</span>
+          <button className="export-button" onClick={handleExport} style={{ marginLeft: '1rem', padding: '0.4rem 0.8rem', fontSize: '0.75rem' }}>⬇ Export</button>
+        </div>
+      </nav>
 
       <main className="dashboard-main">
-        <div className="dashboard-header">
-          <h2>Analysis Results</h2>
-          <p>Model execution complete. Showing insights for the uploaded Dataset.</p>
-        </div>
-
         {stats ? (
-          <>
-            <DashboardStats stats={stats} />
-            <DataCharts stats={stats} />
-            
-            {summaryRow && (
-              <DatasetSummary summaryString={summaryRow["Invoice No"]} />
-            )}
-
-            <InvoiceTable invoices={validInvoices} />
-          </>
+          <Routes>
+            <Route path="/" element={<Navigate to="overview" replace />} />
+            <Route path="overview" element={
+              <div className="page active">
+                <div className="sec-hdr">
+                  <div className="sec-title">Executive Overview</div>
+                  <div className="sec-tag">AI ANALYSIS READY</div>
+                </div>
+                {summaryRow && <DatasetSummary summaryString={summaryRow["Invoice No"]} />}
+                <DashboardStats stats={stats} />
+                <DataCharts stats={stats} />
+              </div>
+            } />
+            <Route path="invoices" element={
+              <div className="page active">
+                <div className="sec-hdr">
+                  <div className="sec-title">Invoice Register</div>
+                  <div className="sec-tag">ANOMALIES DETECTED</div>
+                </div>
+                <InvoiceTable invoices={validInvoices} />
+              </div>
+            } />
+          </Routes>
         ) : (
           <div style={{ textAlign: "center", padding: "3rem" }}>
             <p>Error loading analysis data. Please try again.</p>

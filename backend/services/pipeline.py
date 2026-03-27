@@ -367,14 +367,16 @@ def run_pipeline(excel_file_path: str, output_dir: str):
         df_flagged.to_excel(writer, sheet_name='Flagged Invoices', index=False)
         df_inv.to_excel(writer, sheet_name='All Invoices', index=False)
 
-    top_flagged = []
-    if 'Invoice No' in df_flagged.columns:
-        cols_to_keep = [c for c in ['Invoice No', 'Vendor Name', 'Vendor Name Clean', 'Total Invoice (Rs.)', 'PREDICTED_ANOMALY', 'risk_score', 'risk_decision'] if c in df_flagged.columns]
-        top_flagged = df_flagged[cols_to_keep].fillna("").to_dict(orient='records')
-    elif not df_flagged.empty:
-         # Fallback if 'Invoice No' is missing
-         cols_to_keep = [c for c in ['Vendor Name', 'Vendor Name Clean', 'Total Invoice (Rs.)', 'PREDICTED_ANOMALY', 'risk_score', 'risk_decision'] if c in df_flagged.columns]
-         top_flagged = df_flagged[cols_to_keep].fillna("").to_dict(orient='records')
+    # Return all invoices, not just flagged ones
+    # And keep all columns to allow dynamic rendering in UI
+    # Replace NaNs with empty strings to avoid JSON errors
+    df_all_sorted = df_inv.sort_values('risk_score', ascending=False)
+    
+    # Convert datetime columns to string
+    for col in df_all_sorted.select_dtypes(include=['datetime64[ns]']).columns:
+        df_all_sorted[col] = df_all_sorted[col].astype(str)
+        
+    top_flagged = df_all_sorted.fillna("").to_dict(orient='records')
     
     # Format currency helpers
     def fmt_cur(val): return f"{val:,.0f}"
