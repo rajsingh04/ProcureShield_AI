@@ -35,12 +35,6 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ stats }) => {
   return (
     <>
       <div className="kpi-row">
-        <div className="kpi blue">
-          <div className="kpi-lbl">Total Invoices</div>
-          <div className="kpi-val">{stats.totalInvoices}</div>
-          <div className="kpi-sub">Total records processed</div>
-          <div className="kpi-ico">📋</div>
-        </div>
         <div className="kpi red">
           <div className="kpi-lbl">Flagged Anomalies</div>
           <div className="kpi-val">{stats.flaggedCount || (hold + review)}</div>

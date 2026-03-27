@@ -55,9 +55,14 @@
 }
 
 .table-container {
-  overflow-x: auto;
+  /* Allow horizontal and vertical scrolling inside the table container
+     so the page does not scroll when the user scrolls the table */
+  overflow: auto;
+  max-height: 55vh;
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 8px;
+  /* Enable smooth scrolling on touch devices */
+  -webkit-overflow-scrolling: touch;
   /* Customize scrollbar */
   scrollbar-width: thin;
 }
@@ -88,14 +93,18 @@
 }
 
 .data-table th {
-  background-color: rgba(0, 0, 0, 0.2);
-  color: #a0aec0;
-  font-weight: 500;
+  /* Darker header for high contrast while scrolling */
+  background-color: rgba(10, 14, 25, 0.95);
+  color: #e6eef8;
+  font-weight: 600;
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   position: sticky;
   top: 0;
+  z-index: 12; /* ensure header stays above table rows */
+  box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+  border-bottom: 1px solid rgba(255,255,255,0.03);
 }
 
 .invoice-row {

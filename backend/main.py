@@ -10,7 +10,7 @@ import shutil
 import os
 import logging
 from backend.services.pipeline import run_pipeline
-from backend.database import init_database, check_connection, log_login, log_logout, save_file_metadata, update_file_metadata, get_upload_history
+from backend.database import init_database, check_connection, log_login, log_logout, save_file_metadata, update_file_metadata, get_upload_history, get_report_blob, get_chart_blob
 from backend.config import STORAGE_CONFIG
 
 logging.basicConfig(level=logging.INFO)
@@ -193,8 +193,12 @@ async def analyze_file(file: UploadFile = File(...), authorization: str = Header
         except Exception as e:
             logger.warning(f"Could not save file metadata: {e}")
 
-        # Run pipeline
-        results = run_pipeline(file_location, STORAGE_DIR)
+        # Run pipeline (will return report/chart bytes instead of saving to disk)
+        try:
+            results = run_pipeline(file_location, STORAGE_DIR)
+        except UnicodeDecodeError as e:
+            logger.error(f"Failed to decode uploaded file: {e}")
+            raise HTTPException(status_code=400, detail="Could not read file due to text encoding. Please save it as UTF-8 or Excel and try again.")
 
         # Extract stats for metadata
         stats = results.get("stats", {})
@@ -205,6 +209,9 @@ async def analyze_file(file: UploadFile = File(...), authorization: str = Header
         # Update metadata after processing (only if initial save succeeded)
         try:
             if db_saved and metadata_id and metadata_id > 0:
+                # Pull report and chart bytes from pipeline results if present
+                report_bytes = results.get('report_bytes')
+                chart_bytes = results.get('chart_bytes')
                 update_file_metadata(
                     metadata_id=metadata_id,
                     processing_status='completed',
@@ -212,13 +219,18 @@ async def analyze_file(file: UploadFile = File(...), authorization: str = Header
                     total_invoices=stats.get('totalInvoices', 0),
                     flagged_invoices=flagged_count,
                     risk_score_avg=round(avg_risk, 2),
-                    report_path=os.path.join(STORAGE_DIR, 'ProcureShield_AI_Report.xlsx'),
-                    chart_path=os.path.join(STORAGE_DIR, 'risk_score_distribution.png')
+                    report_blob=report_bytes,
+                    chart_blob=chart_bytes
                 )
             else:
                 logger.warning('Skipping post-processing DB update because initial metadata save failed')
         except Exception as e:
             logger.warning(f"Could not update file metadata: {e}")
+
+        # Remove large binary blobs from response to avoid JSON encoding issues
+        if isinstance(results, dict):
+            results.pop('report_bytes', None)
+            results.pop('chart_bytes', None)
 
         return {"status": "success", "data": results, "metadata_id": (metadata_id if metadata_id and metadata_id > 0 else None), "db_saved": db_saved}
 
@@ -240,21 +252,23 @@ async def analyze_file(file: UploadFile = File(...), authorization: str = Header
         raise HTTPException(status_code=500, detail=f"Pipeline error: {str(e)}")
 
 @app.get("/api/reports/download")
-async def download_report():
-    report_path = os.path.join(STORAGE_DIR, "ProcureShield_AI_Report.xlsx")
-    if os.path.exists(report_path):
-        return FileResponse(
-            report_path,
-            filename="ProcureShield_AI_Report.xlsx",
-            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
-    raise HTTPException(status_code=404, detail="Report not generated yet")
+async def download_report(metadata_id: int = None):
+    """Download the generated report for a given metadata_id."""
+    if not metadata_id:
+        raise HTTPException(status_code=400, detail="metadata_id query parameter is required")
+    blob = get_report_blob(metadata_id)
+    if blob:
+        from fastapi.responses import Response
+        return Response(content=blob, media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', headers={"Content-Disposition": f"attachment; filename=ProcureShield_AI_Report_{metadata_id}.xlsx"})
+    raise HTTPException(status_code=404, detail="Report not found")
 
-@app.get("/api/charts/{chart_name}")
-async def get_chart(chart_name: str):
-    chart_path = os.path.join(STORAGE_DIR, chart_name)
-    if os.path.exists(chart_path):
-        return FileResponse(chart_path, media_type="image/png")
+@app.get("/api/charts/{metadata_id}")
+async def get_chart(metadata_id: int):
+    """Return the generated chart PNG for the given metadata_id."""
+    blob = get_chart_blob(metadata_id)
+    if blob:
+        from fastapi.responses import Response
+        return Response(content=blob, media_type='image/png')
     raise HTTPException(status_code=404, detail="Chart not found")
 
 

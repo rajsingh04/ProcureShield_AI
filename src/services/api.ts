@@ -11,9 +11,14 @@ export const uploadFileForAnalysis = async (file: File) => {
   const formData = new FormData();
   formData.append("file", file);
 
+  const headers: Record<string, string> = {};
+  const token = localStorage.getItem('authToken');
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
   const response = await fetch(`${BASE_URL}/analyze`, {
     method: "POST",
     body: formData,
+    headers,
   });
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ detail: response.statusText }));

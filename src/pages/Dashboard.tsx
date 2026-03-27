@@ -3,6 +3,7 @@ import { Routes, Route, NavLink, Navigate } from "react-router-dom";
 import "./Dashboard.css";
 import DashboardStats from "../components/DashboardStats";
 import DataCharts from "../components/DataCharts";
+import ModelAnomalies from "../components/ModelAnomalies";
 import InvoiceTable from "../components/InvoiceTable";
 import DatasetSummary from "../components/DatasetSummary";
 import { getDownloadReportUrl } from "../services/api";
@@ -21,7 +22,14 @@ const Dashboard: React.FC<DashboardProps> = ({ onBack, data }) => {
   const validInvoices = flaggedInvoices.filter((inv: any) => !inv["Invoice No"] || !(inv["Invoice No"].toString().includes("DATASET SUMMARY") || inv["Invoice No"].toString().includes("Find:")));
 
   const handleExport = () => {
-    window.open(getDownloadReportUrl(), "_blank");
+    const metadataId = data?.metadata_id || data?.data?.metadata_id || responseData?.metadata_id;
+    if (metadataId) {
+      window.open(`${getDownloadReportUrl()}?metadata_id=${metadataId}`, "_blank");
+    } else {
+      // Friendly fallback when no processed report is available
+      // (user can download from History or after running an analysis)
+      alert('No report available to export. Please run an analysis or download from History.');
+    }
   };
 
   return (
@@ -51,8 +59,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onBack, data }) => {
                   <div className="sec-tag">AI ANALYSIS READY</div>
                 </div>
                 {summaryRow && <DatasetSummary summaryString={summaryRow["Invoice No"]} />}
+                {/* Model anomalies panel (counts from model) */}
+                <ModelAnomalies invoices={flaggedInvoices} stats={stats} />
                 <DashboardStats stats={stats} />
-                <DataCharts stats={stats} />
+                <DataCharts stats={stats} flaggedInvoices={flaggedInvoices} />
               </div>
             } />
             <Route path="invoices" element={
