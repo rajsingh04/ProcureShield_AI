@@ -46,6 +46,10 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onAnalyzeSuccess }) => {
 
     try {
       const data = await uploadFileForAnalysis(selectedFile);
+      // show DB save warning if backend couldn't persist metadata
+      if (data && data.db_saved === false) {
+        setError('File processed but metadata could not be saved to the database. Check server logs.');
+      }
       if (onAnalyzeSuccess) {
         onAnalyzeSuccess(data);
       }

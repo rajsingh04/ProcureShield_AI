@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import './App.css'
+import { UserProvider, useUser } from './contexts/UserContext';
+import HistoryModal from './components/HistoryModal';
 import Dashboard from './pages/Dashboard';
 import Home from './pages/Home';
 import Login, { LoginCallback } from './pages/Login';
@@ -40,17 +42,16 @@ function App() {
 
   return (
     <div className="App">
+      <UserProvider>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/login/callback" element={<LoginCallback />} />
         <Route path="/" element={
           <PrivateRoute>
-            <div style={{position: 'absolute', top: 10, right: 20, zIndex: 1000}}>
-              <button onClick={handleLogout} style={{padding: '8px 16px', cursor: 'pointer', borderRadius: '4px'}}>
-                Logout
-              </button>
-            </div>
-            <Home onAnalyzeSuccess={handleAnalyzeSuccess} />
+            <Home
+              onAnalyzeSuccess={handleAnalyzeSuccess}
+              headerRight={<HeaderUser onLogout={handleLogout} />}
+            />
           </PrivateRoute>
         } />
         <Route path="/dashboard/*" element={
@@ -59,8 +60,34 @@ function App() {
           </PrivateRoute>
         } />
       </Routes>
+      </UserProvider>
     </div>
   );
 }
 
 export default App
+
+const HeaderUser: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
+    try {
+    const { user } = useUser();
+    const [historyOpen, setHistoryOpen] = useState(false);
+    return (
+      <div style={{display: 'flex', alignItems: 'center', gap: 12}}>
+        {user && user.name ? <span className="header-username">{user.name}</span> : null}
+        <button className="history-btn" onClick={() => setHistoryOpen(true)} style={{padding: '8px 12px', borderRadius: 8}}>
+          History
+        </button>
+        <button className="header-logout" onClick={onLogout}>
+          Logout
+        </button>
+        <HistoryModal open={historyOpen} onClose={() => setHistoryOpen(false)} />
+      </div>
+    );
+  } catch (e) {
+    return (
+      <button className="header-logout" onClick={onLogout}>
+        Logout
+      </button>
+    );
+  }
+};
