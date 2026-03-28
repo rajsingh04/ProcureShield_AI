@@ -20,7 +20,7 @@ COLLECTION_NAME = "invoice_vectors"
 
 
 def init_qdrant():
-    print("🔄 Connecting to Qdrant...")
+    print("Connecting to Qdrant...")
 
     try:
         client.recreate_collection(
@@ -30,11 +30,11 @@ def init_qdrant():
                 distance=Distance.COSINE
             )
         )
-        print("✅ Qdrant connected successfully")
-        print(f"📦 Collection created: {COLLECTION_NAME}")
+        print("Qdrant connected successfully")
+        print(f"Collection created: {COLLECTION_NAME}")
 
     except Exception as e:
-        print("❌ Qdrant connection failed")
+        print("Qdrant connection failed")
         print("Error:", e)
 
 
