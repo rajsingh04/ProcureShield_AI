@@ -9,6 +9,8 @@ from datetime import datetime, timedelta
 import shutil
 import os
 from backend.services.pipeline import run_pipeline
+from backend.services.qdrant_service import init_qdrant
+from backend.services.qdrant_service import search_vector
 
 load_dotenv()
 
@@ -49,6 +51,13 @@ def create_jwt(user_info: dict):
     }
     return jwt.encode(payload, JWT_SECRET, algorithm="HS256")
 
+
+@app.on_event("startup")
+async def startup():
+    init_qdrant()
+    
+
+
 @app.get("/api/auth/login")
 async def login(request: Request):
     """Initiates the Google OAuth flow"""
@@ -77,6 +86,10 @@ os.makedirs(STORAGE_DIR, exist_ok=True)
 @app.get("/")
 def read_root():
     return {"message": "Welcome to ProcureShield AI API"}
+
+@app.get("/search")
+def search(q: str):
+    return search_vector(q)
 
 @app.post("/api/analyze")
 async def analyze_file(file: UploadFile = File(...)):

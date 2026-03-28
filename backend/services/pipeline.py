@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import seaborn as sns
 import warnings
+from backend.services.qdrant_service import store_vector
+
 
 # Use Agg backend for matplotlib so it doesn't try to open windows
 matplotlib.use('Agg')
@@ -301,6 +303,26 @@ def run_pipeline(excel_file_path: str, output_dir: str):
         return best if s[best] > 30 else 'NORMAL'
 
     df_inv['PREDICTED_ANOMALY'] = df_inv.apply(primary_anomaly, axis=1)
+    
+    #  Qdrant Vector Storage 
+    for idx, row in df_inv.iterrows():
+
+        text = f"""
+        Vendor: {row.get('Vendor Name')}
+        Invoice: {row.get('Invoice No')}
+        Risk Score: {row.get('risk_score')}
+        Decision: {row.get('risk_decision')}
+        """
+
+        payload = {
+            "invoice": row.get("Invoice No"),
+            "risk": row.get("risk_score"),
+            "decision": row.get("risk_decision"),
+            "anomaly": row.get("PREDICTED_ANOMALY")
+        }
+
+        store_vector(idx, text, payload)
+
 
     # Risk ROI Calculation
     df_roi = df_inv.copy()
