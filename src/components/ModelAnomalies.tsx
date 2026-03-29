@@ -68,7 +68,6 @@ const ModelAnomalies: React.FC<ModelAnomaliesProps> = ({ invoices, stats }) => {
   return (
     <div style={{ marginBottom: '1.5rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', marginBottom: '.75rem' }}>
-        <span style={{ fontSize: '1.2rem' }}>🔎</span>
         <h4 style={{ margin: 0, color: '#e2e8f0' }}>Model Detected Anomalies</h4>
       </div>
 

@@ -301,3 +301,29 @@
   border-bottom: 1px solid #1f2645;
   padding-bottom: 0.5rem;
 }
+
+/* Mobile adjustments for table and detail panel */
+@media (max-width: 768px) {
+  .table-section {
+    padding: 1rem 0.75rem;
+  }
+
+  .table-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .table-container {
+    max-height: 60vh;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+}

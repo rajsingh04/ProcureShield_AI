@@ -27,6 +27,28 @@ const DatasetSummary: React.FC<DatasetSummaryProps> = ({ summaryString }) => {
     return { label: part, value: "-" };
   });
 
+  // Optionally recompute "Normal" from the other counts so that
+  // duplicates are only subtracted once:
+  // Normal = Total Invoices - (Duplicate + Rate Mismatch + Ghost + 3-Way Match Fail)
+  const labelToValue: Record<string, number> = {};
+  parsedItems.forEach(({ label, value }) => {
+    const num = parseInt(value.toString().replace(/,/g, ""), 10);
+    if (!isNaN(num)) {
+      labelToValue[label.toLowerCase()] = num;
+    }
+  });
+
+  const total = labelToValue["total invoices"];
+  const dup = labelToValue["duplicate"] ?? labelToValue["duplicates"];
+  const rate = labelToValue["rate mismatch"];
+  const ghost = labelToValue["ghost"];
+  const threeWay = labelToValue["3-way match fail"];
+
+  let computedNormal: number | undefined;
+  if ([total, dup, rate, ghost, threeWay].every(v => typeof v === "number")) {
+    computedNormal = total - (dup + rate + ghost + threeWay);
+  }
+
   return (
     <div style={{
       backgroundColor: "rgba(255, 255, 255, 0.03)",
@@ -60,7 +82,9 @@ const DatasetSummary: React.FC<DatasetSummaryProps> = ({ summaryString }) => {
               {item.label}
             </span>
             <span style={{ color: "#ffffff", fontSize: "1.75rem", fontWeight: "bold" }}>
-              {item.value}
+              {item.label.toLowerCase() === "normal" && typeof computedNormal === "number"
+                ? computedNormal
+                : item.value}
             </span>
           </div>
         ))}

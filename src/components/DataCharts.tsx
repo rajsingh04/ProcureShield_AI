@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import Chart from "chart.js/auto";
 import { type InvoiceStat } from "../types";
+import "./DataCharts.css";
 
 interface DataChartsProps {
   stats: InvoiceStat;
@@ -270,7 +271,7 @@ const DataCharts: React.FC<DataChartsProps> = ({ stats, flaggedInvoices }) => {
   // No metric chart; percentages are computed and displayed in the UI below
 
   return (
-    <section className="charts-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+    <section className="charts-grid">
       <div className="chart-card" style={{ minHeight: 260 }}>
         <h3>Risk Score Distribution</h3>
         <div className="chart-placeholder" style={{ padding: '1rem', height: '220px' }}>
