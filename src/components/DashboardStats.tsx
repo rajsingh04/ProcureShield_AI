@@ -39,38 +39,33 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ stats }) => {
           <div className="kpi-lbl">Flagged Anomalies</div>
           <div className="kpi-val">{stats.flaggedCount || (hold + review)}</div>
           <div className="kpi-sub">Invoices requiring attention</div>
-          <div className="kpi-ico">🚨</div>
         </div>
         <div className="kpi amber">
           <div className="kpi-lbl">Total Invoice Value</div>
           <div className="kpi-val sm">₹{formatCurrency(stats.amountProcessed)}</div>
           <div className="kpi-sub">All invoices</div>
-          <div className="kpi-ico">💰</div>
         </div>
         <div className="kpi red">
           <div className="kpi-lbl">Amount at Risk</div>
           <div className="kpi-val sm">₹{formatCurrency(stats.amountAtRisk)}</div>
           <div className="kpi-sub">From flagged anomalies</div>
-          <div className="kpi-ico">⚠️</div>
         </div>
         <div className="kpi green">
           <div className="kpi-lbl">Amount Recovered</div>
           <div className="kpi-val sm">₹{formatCurrency(stats.amountSaved)}</div>
           <div className="kpi-sub">{recoveryRate}% recovery</div>
-          <div className="kpi-ico">✅</div>
         </div>
         <div className="kpi acc">
           <div className="kpi-lbl">Model Confidence</div>
           <div className="kpi-val">99.2%</div>
           <div className="kpi-sub">AI prediction score</div>
-          <div className="kpi-ico">🤖</div>
         </div>
       </div>
 
       <div className="dec-row">
         <div className="dec-card green">
           <div className="dec-num">{approved}</div>
-          <div className="dec-lbl">✅ Auto Approved</div>
+          <div className="dec-lbl"> Auto Approved</div>
           <div className="dec-sub">Low risk invoices</div>
           <div className="dec-bar">
             <div className="dec-fill" style={{ width: `${total ? (approved/total)*100 : 0}%` }}></div>
@@ -78,7 +73,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ stats }) => {
         </div>
         <div className="dec-card amber">
           <div className="dec-num">{review}</div>
-          <div className="dec-lbl">🔍 Manual Review</div>
+          <div className="dec-lbl"> Manual Review</div>
           <div className="dec-sub">Needs investigation</div>
           <div className="dec-bar">
             <div className="dec-fill" style={{ width: `${total ? (review/total)*100 : 0}%` }}></div>
@@ -86,7 +81,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ stats }) => {
         </div>
         <div className="dec-card red">
           <div className="dec-num">{hold}</div>
-          <div className="dec-lbl">🚫 Auto Hold</div>
+          <div className="dec-lbl"> Auto Hold</div>
           <div className="dec-sub">Fraud suspected</div>
           <div className="dec-bar">
             <div className="dec-fill" style={{ width: `${total ? (hold/total)*100 : 0}%` }}></div>

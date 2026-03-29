@@ -17,6 +17,21 @@ const Dashboard: React.FC<DashboardProps> = ({ onBack, data }) => {
   const responseData = data?.data || data;
   const stats = responseData?.stats;
   const flaggedInvoices = responseData?.flaggedInvoices || [];
+  // Ensure stats contains a flaggedCount (count invoices with anomalies if backend didn't set it)
+  const computeFlaggedCount = () => {
+    if (stats && typeof stats.flaggedCount === 'number' && stats.flaggedCount > 0) return stats.flaggedCount;
+    if (!flaggedInvoices || !Array.isArray(flaggedInvoices)) return 0;
+    return flaggedInvoices.filter((inv: any) => {
+      const pred = (inv.PREDICTED_ANOMALY || inv.PREDICTED || inv.anomaly || '').toString().toUpperCase();
+      const decision = (inv.risk_decision || inv.decision || '').toString().toUpperCase();
+      // flagged if predicted anomaly is not NORMAL or decision is not AUTO APPROVE
+      if (pred && pred !== 'NORMAL') return true;
+      if (decision && decision !== 'AUTO APPROVE') return true;
+      return false;
+    }).length;
+  };
+
+  const statsWithFlagged = stats ? { ...stats, flaggedCount: computeFlaggedCount() } : stats;
   
   const summaryRow = flaggedInvoices.find((inv: any) => inv["Invoice No"] && (inv["Invoice No"].toString().includes("DATASET SUMMARY") || inv["Invoice No"].toString().includes("Find:")));
   const validInvoices = flaggedInvoices.filter((inv: any) => !inv["Invoice No"] || !(inv["Invoice No"].toString().includes("DATASET SUMMARY") || inv["Invoice No"].toString().includes("Find:")));
@@ -60,9 +75,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onBack, data }) => {
                 </div>
                 {summaryRow && <DatasetSummary summaryString={summaryRow["Invoice No"]} />}
                 {/* Model anomalies panel (counts from model) */}
-                <ModelAnomalies invoices={flaggedInvoices} stats={stats} />
-                <DashboardStats stats={stats} />
-                <DataCharts stats={stats} flaggedInvoices={flaggedInvoices} />
+                <ModelAnomalies invoices={flaggedInvoices} stats={statsWithFlagged} />
+                <DashboardStats stats={statsWithFlagged} />
+                <DataCharts stats={statsWithFlagged} flaggedInvoices={flaggedInvoices} />
               </div>
             } />
             <Route path="invoices" element={
