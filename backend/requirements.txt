@@ -24,3 +24,5 @@ httpx
 pyjwt
 python-dotenv
 psycopg2-binary
+qdrant-client
+sentence_transformers

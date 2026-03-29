@@ -224,19 +224,14 @@ const DataCharts: React.FC<DataChartsProps> = ({ stats, flaggedInvoices }) => {
   useEffect(() => {
     if (chartInstances.current['detection']) chartInstances.current['detection'].destroy();
     const recovery = computeRecoveryStats();
-    const types = recovery.types.map((t: any) => t.label);
-    const dataVals: number[] = recovery.dataVals || [];
-    // compute Normal as remaining percent
-    const normalPct = Math.max(0, 100 - dataVals.reduce((s, v) => s + v, 0));
-    const labels = [...types, 'Normal'];
-    const data = [...dataVals, Number(normalPct.toFixed(1))];
+    const labels = recovery.types.map((t: any) => t.label);
+    const data: number[] = recovery.dataVals || [];
 
     const colors = [
       'rgba(255,99,132,0.8)',
       'rgba(54,162,235,0.8)',
       'rgba(255,205,86,0.8)',
-      'rgba(75,192,192,0.8)',
-      'rgba(201,203,207,0.8)'
+      'rgba(75,192,192,0.8)'
     ];
 
     const ctx = detectionChartRef.current?.getContext && detectionChartRef.current.getContext('2d');

@@ -6,6 +6,9 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import seaborn as sns
 import warnings
+from backend.services.qdrant_service import create_embeddings, upsert_points, EMBED_BATCH_SIZE, UPSERT_BATCH_SIZE
+import time
+
 
 # Use Agg backend for matplotlib so it doesn't try to open windows
 matplotlib.use('Agg')
@@ -315,6 +318,36 @@ def run_pipeline(excel_file_path: str, output_dir: str):
         return best if s[best] > 30 else 'NORMAL'
 
     df_inv['PREDICTED_ANOMALY'] = df_inv.apply(primary_anomaly, axis=1)
+    # Qdrant Vector Storage (batched for performance)
+    texts = []
+    points = []
+    for idx, row in df_inv.iterrows():
+        text = f"Vendor: {row.get('Vendor Name')}\nInvoice: {row.get('Invoice No')}\nRisk Score: {row.get('risk_score')}\nDecision: {row.get('risk_decision')}"
+
+        payload = {
+            "invoice": row.get("Invoice No"),
+            "risk": row.get("risk_score"),
+            "decision": row.get("risk_decision"),
+            "anomaly": row.get("PREDICTED_ANOMALY")
+        }
+
+        texts.append(text)
+        points.append({"id": int(idx), "vector": None, "payload": payload})
+
+    if texts:
+        try:
+            print(f"Preparing to encode {len(texts)} items (embed_batch={EMBED_BATCH_SIZE}) and upsert (upsert_batch={UPSERT_BATCH_SIZE})")
+            t0 = time.time()
+            vectors = create_embeddings(texts, batch_size=EMBED_BATCH_SIZE)
+            t1 = time.time()
+            for i, v in enumerate(vectors):
+                points[i]["vector"] = v
+            print(f"Embeddings completed in {t1 - t0:.2f}s; starting upsert")
+            upsert_points(points, batch_size=UPSERT_BATCH_SIZE)
+        except Exception as e:
+            print(f"Qdrant batch upload failed: {e}")
+            # Do not fallback to per-row upserts to avoid large number of HTTP requests.
+            # Investigate the error in logs; pipeline will continue without retrying.
 
     # Risk ROI Calculation
     df_roi = df_inv.copy()

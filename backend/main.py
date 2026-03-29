@@ -12,6 +12,8 @@ import logging
 from backend.services.pipeline import run_pipeline
 from backend.database import init_database, check_connection, log_login, log_logout, save_file_metadata, update_file_metadata, get_upload_history, get_report_blob, get_chart_blob
 from backend.config import STORAGE_CONFIG
+from backend.services.qdrant_service import init_qdrant
+from backend.services.qdrant_service import search_vector
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -65,6 +67,9 @@ def create_jwt(user_info: dict):
     }
     return jwt.encode(payload, JWT_SECRET, algorithm="HS256")
 
+@app.on_event("startup")
+async def startup():
+    init_qdrant()
 
 def get_client_ip(request: Request) -> str:
     """Extracts client IP address from request."""
@@ -124,6 +129,9 @@ def read_root():
     db_status = "connected" if check_connection() else "disconnected"
     return {"message": "Welcome to ProcureShield AI API", "database": db_status}
 
+@app.get("/search")
+def search(q: str):
+    return search_vector(q)
 
 @app.post("/api/analyze")
 async def analyze_file(file: UploadFile = File(...), authorization: str = Header(None)):

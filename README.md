@@ -84,6 +84,73 @@ If the database connection fails, check:
 - The user/password are correct and have privileges on the database.
 - The `.env` file is present in the project root and the terminal is started from that root when running the backend.
 
+### 1.2 Vector DB (Qdrant) — setup and how to view data
+
+The project uses Qdrant as a vector store for invoice embeddings. The backend reads `QDRANT_URL` and `QDRANT_API_KEY` from the environment and will call `init_qdrant()` on startup to create/reset the `invoice_vectors` collection defined in `backend/services/qdrant_service.py`.
+
+Local quickstart (Docker):
+
+```bash
+# Run Qdrant HTTP server (default port 6333)
+docker run -p 6333:6333 qdrant/qdrant:latest
+
+# (Optional) Run Qdrant UI to inspect collections and points at http://localhost:6334
+docker run -p 6334:6334 qdrant/qdrant-ui:latest
+```
+
+Environment variables (add to your `.env`):
+
+```env
+QDRANT_URL=http://localhost:6333
+# If you run a local instance without API key, leave QDRANT_API_KEY empty or omit it
+QDRANT_API_KEY=
+```
+
+How the backend initializes the collection:
+
+- On FastAPI startup `backend/main.py` calls `init_qdrant()` which recreates the collection named `invoice_vectors` with vector size 384 and cosine distance (see `backend/services/qdrant_service.py`).
+
+How to inspect Qdrant data and collections
+
+1. Using the Qdrant UI (recommended):
+   - Open `http://localhost:6334` (if you started the `qdrant-ui` container).
+   - You can view collections, their schema, and sample points directly in the UI.
+
+2. Using the REST API (curl):
+   - List collections:
+
+```bash
+curl http://localhost:6333/collections
+```
+
+3. Using the Python client (REPL or script):
+
+```python
+from qdrant_client import QdrantClient
+
+client = QdrantClient(url="http://localhost:6333")
+
+# List collections
+print(client.get_collections())
+
+# Get collection info
+print(client.get_collection(collection_name="invoice_vectors"))
+
+# Scroll points (paginated)
+for page in client.scroll(collection_name="invoice_vectors", limit=100):
+    print(page)
+```
+
+4. Querying/searching embeddings
+
+- The backend exposes a simple search endpoint at `/search?q=your query` which uses the same `qdrant_client` to embed the query and return the top matches (see `backend/main.py` and `backend/services/qdrant_service.py`).
+
+Notes and troubleshooting
+
+- If `init_qdrant()` recreates the collection on startup, existing points in that collection will be removed. Remove or modify the call in `backend/main.py` if you want to keep persisted vectors between restarts.
+- If you use Qdrant Cloud, set `QDRANT_URL` to the cloud endpoint and set `QDRANT_API_KEY` accordingly.
+- Ensure your firewall or Docker networking allows access to the Qdrant ports (`6333` for API, `6334` for UI when using the UI container).
+
 ### 2. Frontend Setup
 
 The frontend serves the interactive data dashboard and file uploader.
