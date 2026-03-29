@@ -26,9 +26,18 @@ app.add_middleware(
     SessionMiddleware, secret_key=os.getenv("SECRET_KEY", "super-secret-session-key")
 )
 
+# CORS: explicitly allow your frontend origins. Using "*" together with
+# allow_credentials=True will prevent Starlette from sending CORS headers.
+frontend_origin = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
+allowed_origins = {
+    frontend_origin,
+    "http://localhost:5173",
+    "https://procure-shield-ai.vercel.app",
+}
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production, restrict to frontend URL
+    allow_origins=list(allowed_origins),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -47,6 +56,7 @@ oauth.register(
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 JWT_SECRET = os.getenv("JWT_SECRET", "jwt-super-secret-key")
+GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI")
 
 # Initialize database on startup
 try:
@@ -92,7 +102,10 @@ def verify_jwt(token: str) -> dict:
 @app.get("/api/auth/login")
 async def login(request: Request):
     """Initiates the Google OAuth flow"""
-    redirect_uri = request.url_for('auth_callback')
+    # Allow overriding the redirect URI via env so it matches exactly
+    # what is configured in the Google Cloud Console.
+    redirect_uri = GOOGLE_REDIRECT_URI or str(request.url_for('auth_callback'))
+    logger.info(f"Google OAuth redirect_uri: {redirect_uri}")
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 @app.get("/api/auth/callback")

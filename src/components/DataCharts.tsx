@@ -306,9 +306,8 @@ const DataCharts: React.FC<DataChartsProps> = ({ stats, flaggedInvoices }) => {
         <div style={{ padding: '0.5rem 1rem 1rem 1rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
           {/* small legend with counts */}
           {(() => {
-            const { types, rawCounts, dataVals } = computeRecoveryStats() as any;
+            const { types, rawCounts,  } = computeRecoveryStats() as any;
             if (!types) return null;
-            const normalPct = Math.max(0, 100 - (dataVals || []).reduce((s: number, v: number) => s + v, 0));
             return (
               <>
                 {types.map((t: any, i: number) => {

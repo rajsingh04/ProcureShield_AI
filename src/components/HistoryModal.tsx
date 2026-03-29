@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import './HistoryModal.css';
+import { API_BASE_URL } from '../services/api';
 
 type UploadRecord = {
   id: number;
@@ -26,7 +27,7 @@ const HistoryModal: React.FC<{ open: boolean; onClose: () => void }> = ({ open, 
       setError(null);
       try {
         const token = localStorage.getItem('authToken');
-        const res = await fetch('/api/uploads/history', {
+        const res = await fetch(`${API_BASE_URL}/uploads/history`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         if (!res.ok) throw new Error('Failed to load history');
@@ -82,7 +83,12 @@ const HistoryModal: React.FC<{ open: boolean; onClose: () => void }> = ({ open, 
                 </div>
                 <div className="actions">
                   {h.processing_status === 'completed' && (
-                    <a className="report-link" href={`/api/reports/download?metadata_id=${h.id}`} target="_blank" rel="noreferrer">
+                    <a
+                      className="report-link"
+                      href={`${API_BASE_URL}/reports/download?metadata_id=${h.id}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
                         <path d="M12 3v10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                         <path d="M8 11l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>

@@ -1,10 +1,14 @@
 // API service wrappers
 
-const BASE_URL = "/api";
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+// Backend base URL. In production, set VITE_BACKEND_URL to your Railway
+// backend URL. In local dev, set it to http://localhost:8000.
+export const BACKEND_URL =
+  import.meta.env.VITE_BACKEND_URL || "https://procureshieldai-production.up.railway.app";
+
+export const API_BASE_URL = `${BACKEND_URL}/api`;
 
 export const initiateGoogleLogin = () => {
-  window.location.href = `${BACKEND_URL}/api/auth/login`;
+  window.location.href = `${API_BASE_URL}/auth/login`;
 };
 
 export const uploadFileForAnalysis = async (file: File) => {
@@ -15,7 +19,7 @@ export const uploadFileForAnalysis = async (file: File) => {
   const token = localStorage.getItem('authToken');
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
-  const response = await fetch(`${BASE_URL}/analyze`, {
+  const response = await fetch(`${API_BASE_URL}/analyze`, {
     method: "POST",
     body: formData,
     headers,
@@ -29,9 +33,9 @@ export const uploadFileForAnalysis = async (file: File) => {
 };
 
 export const getDownloadReportUrl = () => {
-  return `${BASE_URL}/reports/download`;
+  return `${API_BASE_URL}/reports/download`;
 };
 
 export const getChartUrl = (chartName: string) => {
-  return `${BASE_URL}/charts/${chartName}`;
+  return `${API_BASE_URL}/charts/${chartName}`;
 };
