@@ -1,11 +1,19 @@
 import os
+import time
+import hashlib
 from dotenv import load_dotenv
 from qdrant_client import QdrantClient
 from qdrant_client.models import VectorParams, Distance
-from sentence_transformers import SentenceTransformer
+import numpy as np
+
+try:
+    from sentence_transformers import SentenceTransformer  # optional heavy dependency
+    _HAS_SENTENCE_TRANSFORMERS = True
+except ImportError:  # On Railway we skip installing it to keep image small
+    SentenceTransformer = None
+    _HAS_SENTENCE_TRANSFORMERS = False
 
 load_dotenv()
-import time
 
 QDRANT_URL = os.getenv("QDRANT_URL")
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
@@ -15,7 +23,16 @@ client = QdrantClient(
     api_key=QDRANT_API_KEY
 )
 
-model = SentenceTransformer("all-MiniLM-L6-v2")
+# If sentence-transformers is available (e.g., locally), use a real
+# transformer model. On lightweight deployments (like Railway free tier)
+# we fall back to a simple hashed bag-of-words embedding implemented
+# with NumPy so we don't need PyTorch and GPU libraries.
+if _HAS_SENTENCE_TRANSFORMERS:
+    model = SentenceTransformer("all-MiniLM-L6-v2")
+    VECTOR_SIZE = int(getattr(model, "get_sentence_embedding_dimension", lambda: 384)())
+else:
+    model = None
+    VECTOR_SIZE = 384
 
 COLLECTION_NAME = "invoice_vectors"
 
@@ -30,7 +47,7 @@ def init_qdrant():
             client.recreate_collection(
                 collection_name=COLLECTION_NAME,
                 vectors_config=VectorParams(
-                    size=384,
+                    size=VECTOR_SIZE,
                     distance=Distance.COSINE
                 )
             )
@@ -43,7 +60,7 @@ def init_qdrant():
             except Exception:
                 client.create_collection(
                     collection_name=COLLECTION_NAME,
-                    vectors_config=VectorParams(size=384, distance=Distance.COSINE)
+                    vectors_config=VectorParams(size=VECTOR_SIZE, distance=Distance.COSINE)
                 )
                 print("Qdrant collection created:", COLLECTION_NAME)
 
@@ -62,10 +79,36 @@ def init_qdrant():
 #             distance=Distance.COSINE
 #         )
 #     )
+def _simple_hashed_embedding(text: str) -> list:
+    """Lightweight bag-of-words style embedding using hashing.
+
+    This avoids pulling in heavy ML libraries. It is not as
+    semantically powerful as transformer embeddings but is
+    sufficient for basic similarity search while keeping
+    the container size small.
+    """
+    vec = np.zeros(VECTOR_SIZE, dtype=np.float32)
+    if not text:
+        return vec.tolist()
+
+    tokens = str(text).lower().split()
+    for tok in tokens:
+        h = int(hashlib.md5(tok.encode("utf-8")).hexdigest(), 16)
+        # Spread hash across a few positions to reduce collisions
+        for i in range(4):
+            idx = (h >> (i * 8)) % VECTOR_SIZE
+            vec[idx] += 1.0
+
+    norm = np.linalg.norm(vec)
+    if norm > 0:
+        vec /= norm
+    return vec.tolist()
 
 
 def create_embedding(text):
-    return model.encode(text).tolist()
+    if model is not None:
+        return model.encode(text).tolist()
+    return _simple_hashed_embedding(text)
 
 
 def store_vector(id, text, payload):
@@ -94,17 +137,28 @@ def create_embeddings(texts, batch_size: int = None):
     """
     if not texts:
         return []
-    bs = batch_size or EMBED_BATCH_SIZE
+
+    # Use the transformer model if available, otherwise fall back
+    # to the lightweight hashed embedding.
+    if model is not None:
+        bs = batch_size or EMBED_BATCH_SIZE
+        start = time.time()
+        vectors = model.encode(
+            texts,
+            batch_size=bs,
+            show_progress_bar=False,
+            convert_to_numpy=True
+        )
+        duration = time.time() - start
+        print(f"Encoded {len(texts)} texts in {duration:.2f}s (batch_size={bs})")
+        return vectors.tolist()
+
+    # Fallback: simple hashed embeddings per text
     start = time.time()
-    vectors = model.encode(
-        texts,
-        batch_size=bs,
-        show_progress_bar=False,
-        convert_to_numpy=True
-    )
+    vectors = [_simple_hashed_embedding(t) for t in texts]
     duration = time.time() - start
-    print(f"Encoded {len(texts)} texts in {duration:.2f}s (batch_size={bs})")
-    return vectors.tolist()
+    print(f"Encoded {len(texts)} texts with fallback embeddings in {duration:.2f}s")
+    return vectors
 
 
 def upsert_points(points, batch_size: int = None):
