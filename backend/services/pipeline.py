@@ -293,11 +293,13 @@ def run_pipeline(excel_file_path: str, output_dir: str):
         return scores
     df_inv['match_score'] = detect_three_way(df_inv)
 
+    # Weighted blend of component scores (must sum to 1.0):
+    # 3-Way Match Fail: 40%, Duplicates: 25%, Ghost: 20%, Rate Mismatch: 15%
     df_inv['risk_score'] = (
-        df_inv['dup_score'] * 0.30 +
-        df_inv['rate_score'] * 0.25 +
-        df_inv['ghost_score'] * 0.30 +
-        df_inv['match_score'] * 0.15
+        df_inv['dup_score'] * 0.25 +
+        df_inv['rate_score'] * 0.15 +
+        df_inv['ghost_score'] * 0.20 +
+        df_inv['match_score'] * 0.40
     ).round(1)
 
     def risk_decision(score):

@@ -15,11 +15,7 @@ const Home: React.FC<HomeProps> = ({ onAnalyzeSuccess, headerRight }) => {
           <span className="logo-icon">🛡️</span>
           <h1>ProcureShield AI</h1>
         </div>
-        {headerRight && (
-          <div>
-            {headerRight}
-          </div>
-        )}
+        {headerRight && <div>{headerRight}</div>}
       </header>
 
       <main className="home-main">

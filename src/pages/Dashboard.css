@@ -96,7 +96,7 @@
   z-index: 100;
   background: rgba(7, 10, 18, 0.92);
   backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   height: 56px;
   display: flex;
   align-items: center;
@@ -155,7 +155,7 @@
   font-family: monospace;
   font-size: 0.6rem;
   padding: 0.25rem 0.6rem;
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 20px;
   color: #8b97c6;
 }
@@ -168,8 +168,13 @@
   animation: blink 2s infinite;
 }
 @keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }
 
 .sec-hdr {

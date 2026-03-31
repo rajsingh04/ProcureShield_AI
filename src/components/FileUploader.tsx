@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import './FileUploader.css';
-import { uploadFileForAnalysis } from '../services/api';
+import React, { useState } from "react";
+import "./FileUploader.css";
+import { uploadFileForAnalysis } from "../services/api";
 
 interface FileUploaderProps {
   onAnalyzeSuccess?: (data: any) => void;
@@ -48,13 +48,15 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onAnalyzeSuccess }) => {
       const data = await uploadFileForAnalysis(selectedFile);
       // show DB save warning if backend couldn't persist metadata
       if (data && data.db_saved === false) {
-        setError('File processed but metadata could not be saved to the database. Check server logs.');
+        setError(
+          "File processed but metadata could not be saved to the database. Check server logs.",
+        );
       }
       if (onAnalyzeSuccess) {
         onAnalyzeSuccess(data);
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to analyze file');
+      setError(err.message || "Failed to analyze file");
     } finally {
       setLoading(false);
     }
@@ -62,7 +64,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onAnalyzeSuccess }) => {
 
   return (
     <div className="uploader-container">
-      <form 
+      <form
         className={`uploader-form ${dragActive ? "drag-active" : ""}`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -70,10 +72,21 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onAnalyzeSuccess }) => {
         onDrop={handleDrop}
       >
         <div className="uploader-content">
-          <svg className="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+          <svg
+            className="upload-icon"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+            ></path>
           </svg>
-          
+
           {selectedFile ? (
             <p className="file-name">Selected: {selectedFile.name}</p>
           ) : (
@@ -85,13 +98,30 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onAnalyzeSuccess }) => {
 
           <label className="upload-button">
             {selectedFile ? "Change File" : "Browse Files"}
-            <input type="file" className="file-input" accept=".xlsx,.xls,.csv" onChange={handleChange} />
+            <input
+              type="file"
+              className="file-input"
+              accept=".xlsx,.xls,.csv"
+              onChange={handleChange}
+            />
           </label>
 
-          {error && <p className="error-message" style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
+          {error && (
+            <p
+              className="error-message"
+              style={{ color: "red", marginTop: "10px" }}
+            >
+              {error}
+            </p>
+          )}
 
           {selectedFile && (
-            <button className="analyze-button" type="button" onClick={handleAnalyze} disabled={loading}>
+            <button
+              className="analyze-button"
+              type="button"
+              onClick={handleAnalyze}
+              disabled={loading}
+            >
               {loading ? "Analyzing..." : "Analyze Data"}
             </button>
           )}

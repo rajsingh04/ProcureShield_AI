@@ -1,55 +1,75 @@
 /* Header username styling */
 .header-username {
-	font-family: "Inter", system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-	font-weight: 700;
-	font-size: 0.95rem;
-	color: #ffffff; /* light text for dark header */
-	background: linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
-	padding: 6px 10px;
-	border-radius: 999px;
-	box-shadow: 0 2px 8px rgba(2,6,23,0.45);
-	margin-right: 4px;
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #ffffff; /* light text for dark header */
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.06),
+    rgba(255, 255, 255, 0.02)
+  );
+  padding: 6px 10px;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(2, 6, 23, 0.45);
+  margin-right: 4px;
 }
 
 @media (max-width: 520px) {
-	.header-username {
-		font-size: 0.85rem;
-		padding: 5px 8px;
-	}
+  .header-username {
+    font-size: 0.85rem;
+    padding: 5px 8px;
+  }
 }
 
 /* Logout button in header - red theme */
 .header-logout {
-	background: linear-gradient(180deg, #ef4444, #dc2626); /* bright to darker red */
-	color: #fff;
-	border: 1px solid rgba(0,0,0,0.12);
-	padding: 8px 14px;
-	border-radius: 8px;
-	cursor: pointer;
-	font-weight: 600;
-	box-shadow: 0 6px 18px rgba(220,38,38,0.18);
-	transition: transform 0.08s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+  background: linear-gradient(
+    180deg,
+    #ef4444,
+    #dc2626
+  ); /* bright to darker red */
+  color: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 6px 18px rgba(220, 38, 38, 0.18);
+  transition:
+    transform 0.08s ease,
+    box-shadow 0.12s ease,
+    opacity 0.12s ease;
 }
 
 .header-logout:hover {
-	transform: translateY(-2px);
-	box-shadow: 0 10px 22px rgba(220,38,38,0.22);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(220, 38, 38, 0.22);
 }
 
 .header-logout:active {
-	transform: translateY(0px);
-	opacity: 0.95;
+  transform: translateY(0px);
+  opacity: 0.95;
 }
 
 /* History button small style */
 .history-btn {
-	background: rgba(255,255,255,0.03);
-	color: #e6edf3;
-	border: 1px solid rgba(255,255,255,0.04);
-	padding: 8px 12px;
-	border-radius: 8px;
-	cursor: pointer;
-	font-weight: 600;
+  background: rgba(255, 255, 255, 0.03);
+  color: #e6edf3;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
 }
 
-.history-btn:hover { transform: translateY(-2px); }
+.history-btn:hover {
+  transform: translateY(-2px);
+}

@@ -26,7 +26,8 @@
   flex-wrap: wrap;
 }
 
-.filter-input, .filter-select {
+.filter-input,
+.filter-select {
   background-color: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #fff;
@@ -36,7 +37,8 @@
   min-width: 150px;
 }
 
-.filter-input:focus, .filter-select:focus {
+.filter-input:focus,
+.filter-select:focus {
   outline: none;
   border-color: #5b7cfa;
 }
@@ -72,10 +74,10 @@
   height: 8px;
 }
 .table-container::-webkit-scrollbar-track {
-  background: rgba(0,0,0,0.1);
+  background: rgba(0, 0, 0, 0.1);
 }
 .table-container::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 4px;
 }
 
@@ -103,8 +105,8 @@
   position: sticky;
   top: 0;
   z-index: 12; /* ensure header stays above table rows */
-  box-shadow: 0 2px 6px rgba(0,0,0,0.35);
-  border-bottom: 1px solid rgba(255,255,255,0.03);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
 }
 
 .invoice-row {
